@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Pedidos Formais com IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --azul:    #1a4f7a;
+    --azul2:   #2563a8;
+    --ceu:     #e8f3fc;
+    --verde:   #1a6b45;
+    --verde2:  #d0eed9;
+    --cinza1:  #f5f6f8;
+    --cinza2:  #e4e7ed;
+    --cinza3:  #9aa3b0;
+    --preto:   #1a1f2e;
+    --branco:  #ffffff;
+    --sombra:  0 2px 16px rgba(26,79,122,0.10);
+    --r:       12px;
+  }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: #f0f4f9;
+    color: var(--preto);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--azul);
+    padding: 0 1.5rem;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  .header-inner {
+    max-width: 860px; margin: 0 auto;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 0;
+  }
+  .logo-circle {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  header h1 { color: #fff; font-size: 1rem; font-weight: 600; line-height: 1.3; }
+  header p  { color: rgba(255,255,255,0.65); font-size: 0.72rem; margin-top: 1px; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--azul) 0%, var(--azul2) 100%);
+    padding: 2.5rem 1.5rem 3rem;
+    text-align: center; color: #fff;
+  }
+  .hero h2 { font-family: 'Source Serif 4', serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600; line-height: 1.3; margin-bottom: .7rem; }
+  .hero p  { font-size: .9rem; color: rgba(255,255,255,0.75); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+
+  /* ── MAIN LAYOUT ── */
+  main { max-width: 860px; margin: -1.5rem auto 3rem; padding: 0 1rem; }
+
+  /* ── TIPO CARDS ── */
+  .tipos-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--cinza3); margin-bottom: .7rem; }
+  .tipos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: .65rem; margin-bottom: 1.5rem; }
+
+  .tipo-card {
+    background: var(--branco);
+    border: 2px solid var(--cinza2);
+    border-radius: var(--r); padding: .85rem .8rem;
+    cursor: pointer; transition: all .18s ease;
+    text-align: center;
+  }
+  .tipo-card:hover { border-color: var(--azul2); background: var(--ceu); transform: translateY(-2px); box-shadow: var(--sombra); }
+  .tipo-card.ativo { border-color: var(--azul); background: var(--ceu); box-shadow: 0 0 0 3px rgba(37,99,168,.15); }
+  .tipo-card .icone { font-size: 1.6rem; margin-bottom: .4rem; display: block; }
+  .tipo-card .nome { font-size: .78rem; font-weight: 600; color: var(--azul); line-height: 1.3; }
+
+  /* ── FORMULÁRIO ── */
+  .formulario-box {
+    background: var(--branco); border-radius: var(--r);
+    box-shadow: var(--sombra); padding: 1.5rem;
+    margin-bottom: 1.5rem; display: none;
+  }
+  .formulario-box.visivel { display: block; animation: fadeUp .25s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .form-titulo { font-size: 1rem; font-weight: 700; color: var(--azul); margin-bottom: 1.1rem; display: flex; align-items: center; gap: .5rem; }
+  .form-titulo span { font-size: 1.3rem; }
+
+  .campos { display: grid; gap: .85rem; }
+  .campo label { display: block; font-size: .78rem; font-weight: 600; color: var(--preto); margin-bottom: .3rem; }
+  .campo label em { color: var(--cinza3); font-style: normal; font-weight: 400; }
+  .campo input, .campo textarea, .campo select {
+    width: 100%; font-family: 'Sora', sans-serif; font-size: .88rem;
+    padding: .6rem .85rem; border-radius: 8px;
+    border: 1.5px solid var(--cinza2); background: var(--cinza1);
+    color: var(--preto); transition: border .15s;
+    outline: none; resize: vertical;
+  }
+  .campo input:focus, .campo textarea:focus, .campo select:focus { border-color: var(--azul2); background: var(--branco); }
+  .campo textarea { min-height: 80px; }
+
+  .btn-gerar {
+    margin-top: 1.1rem; width: 100%;
+    background: var(--azul); color: #fff;
+    border: none; border-radius: 8px;
+    padding: .85rem; font-family: 'Sora', sans-serif;
+    font-size: .92rem; font-weight: 700;
+    cursor: pointer; transition: background .15s, transform .1s;
+    letter-spacing: .01em;
+  }
+  .btn-gerar:hover { background: var(--azul2); transform: translateY(-1px); }
+  .btn-gerar:active { transform: scale(.98); }
+
+  /* ── RESULTADO ── */
+  .resultado-box {
+    background: var(--branco); border-radius: var(--r);
+    box-shadow: var(--sombra); padding: 1.5rem;
+    display: none;
+  }
+  .resultado-box.visivel { display: block; animation: fadeUp .25s ease; }
+
+  .resultado-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+  .resultado-header h3 { font-size: .92rem; font-weight: 700; color: var(--verde); display: flex; align-items: center; gap: .4rem; }
+
+  .acoes { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .btn-copiar, .btn-novo {
+    padding: .5rem 1rem; border-radius: 7px;
+    font-family: 'Sora', sans-serif; font-size: .8rem; font-weight: 600;
+    cursor: pointer; transition: all .15s; border: none;
+  }
+  .btn-copiar { background: var(--verde); color: #fff; }
+  .btn-copiar:hover { background: #145a38; }
+  .btn-copiar.copiado { background: #145a38; }
+  .btn-novo { background: var(--cinza1); color: var(--azul); border: 1.5px solid var(--cinza2); }
+  .btn-novo:hover { background: var(--ceu); border-color: var(--azul2); }
+
+  .texto-gerado {
+    background: var(--cinza1); border: 1.5px solid var(--cinza2);
+    border-radius: 8px; padding: 1.1rem 1.2rem;
+    font-family: 'Source Serif 4', serif; font-size: .92rem;
+    line-height: 1.8; color: var(--preto); white-space: pre-wrap;
+  }
+
+  .dica-chatgpt {
+    margin-top: 1rem; background: var(--ceu);
+    border-left: 3px solid var(--azul2);
+    border-radius: 0 8px 8px 0;
+    padding: .8rem 1rem; font-size: .8rem;
+    color: var(--azul); line-height: 1.6;
+  }
+  .dica-chatgpt strong { font-weight: 700; }
+
+  /* ── RODAPÉ ── */
+  footer { text-align: center; padding: 1.5rem 1rem 2rem; color: var(--cinza3); font-size: .75rem; line-height: 1.7; }
+  footer a { color: var(--azul2); text-decoration: none; }
+
+  /* ── RESPONSIVO ── */
+  @media (max-width: 500px) {
+    .tipos-grid { grid-template-columns: repeat(2, 1fr); }
+    .hero { padding: 2rem 1rem 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-circle">🤖</div>
+    <div>
+      <h1>Gerador de Pedidos Formais com IA</h1>
+      <p>Projeto Extensionista · UNINTER ADS · Petrolina/PE</p>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <h2>Escreva pedidos formais<br>de forma simples e rápida</h2>
+  <p>Preencha os campos abaixo e gere um texto pronto para usar ou enviar ao ChatGPT.</p>
+</div>
+
+<main>
+
+  <p class="tipos-label">Escolha o tipo de pedido</p>
+
+  <div class="tipos-grid" id="tiposGrid">
+    <div class="tipo-card" onclick="selecionarTipo('requerimento')">
+      <span class="icone">🏛️</span>
+      <span class="nome">Requerimento em órgão público</span>
+    </div>
+    <div class="tipo-card" onclick="selecionarTipo('beneficio')">
+      <span class="icone">📋</span>
+      <span class="nome">Carta de bolsa ou benefício</span>
+    </div>
+    <div class="tipo-card" onclick="selecionarTipo('escola')">
+      <span class="icone">🏫</span>
+      <span class="nome">Mensagem para escola</span>
+    </div>
+    <div class="tipo-card" onclick="selecionarTipo('associacao')">
+      <span class="icone">🏘️</span>
+      <span class="nome">Solicitação à associação</span>
+    </div>
+    <div class="tipo-card" onclick="selecionarTipo('curriculo')">
+      <span class="icone">📄</span>
+      <span class="nome">Currículo simples</span>
+    </div>
+  </div>
+
+  <!-- FORMULÁRIOS -->
+  <div class="formulario-box" id="form-requerimento">
+    <div class="form-titulo"><span>🏛️</span> Requerimento em órgão público</div>
+    <div class="campos">
+      <div class="campo"><label>Seu nome completo</label><input type="text" id="r-nome" placeholder="Ex: Maria da Silva Santos"></div>
+      <div class="campo"><label>CPF <em>(opcional)</em></label><input type="text" id="r-cpf" placeholder="Ex: 123.456.789-00"></div>
+      <div class="campo"><label>Nome do órgão ou instituição</label><input type="text" id="r-orgao" placeholder="Ex: Prefeitura Municipal de Petrolina"></div>
+      <div class="campo"><label>O que você está pedindo?</label><input type="text" id="r-documento" placeholder="Ex: segunda via da certidão de nascimento"></div>
+      <div class="campo"><label>Por que você precisa?</label><textarea id="r-motivo" placeholder="Ex: para regularizar minha situação no cadastro único"></textarea></div>
+    </div>
+    <button class="btn-gerar" onclick="gerarTexto('requerimento')">✨ Gerar texto do pedido</button>
+  </div>
+
+  <div class="formulario-box" id="form-beneficio">
+    <div class="form-titulo"><span>📋</span> Carta de bolsa ou benefício</div>
+    <div class="campos">
+      <div class="campo"><label>Seu nome completo</label><input type="text" id="b-nome" placeholder="Ex: João Carlos Ferreira"></div>
+      <div class="campo"><label>Nome do bairro ou cidade</label><input type="text" id="b-bairro" placeholder="Ex: Areia Branca, Petrolina/PE"></div>
+      <div class="campo"><label>Nome da bolsa ou benefício</label><input type="text" id="b-beneficio" placeholder="Ex: Bolsa Família, auxílio moradia"></div>
+      <div class="campo"><label>Sua situação atual</label><textarea id="b-situacao" placeholder="Ex: sou mãe solo com dois filhos, estou desempregada há 6 meses"></textarea></div>
+    </div>
+    <button class="btn-gerar" onclick="gerarTexto('beneficio')">✨ Gerar carta</button>
+  </div>
+
+  <div class="formulario-box" id="form-escola">
+    <div class="form-titulo"><span>🏫</span> Mensagem para escola</div>
+    <div class="campos">
+      <div class="campo"><label>Seu nome (responsável)</label><input type="text" id="e-nome" placeholder="Ex: Ana Beatriz Lima"></div>
+      <div class="campo"><label>Nome do(a) filho(a) / aluno(a)</label><input type="text" id="e-filho" placeholder="Ex: Pedro Lima"></div>
+      <div class="campo"><label>Série ou turma</label><input type="text" id="e-serie" placeholder="Ex: 3º ano do Ensino Fundamental"></div>
+      <div class="campo"><label>Qual é o motivo da mensagem?</label><textarea id="e-motivo" placeholder="Ex: justificar a falta do dia 15/05 por motivo de doença"></textarea></div>
+    </div>
+    <button class="btn-gerar" onclick="gerarTexto('escola')">✨ Gerar mensagem</button>
+  </div>
+
+  <div class="formulario-box" id="form-associacao">
+    <div class="form-titulo"><span>🏘️</span> Solicitação à associação de moradores</div>
+    <div class="campos">
+      <div class="campo"><label>Seu nome completo</label><input type="text" id="a-nome" placeholder="Ex: Carlos Eduardo Souza"></div>
+      <div class="campo"><label>Rua e bairro onde mora</label><input type="text" id="a-endereco" placeholder="Ex: Rua das Flores, 45 – Areia Branca"></div>
+      <div class="campo"><label>O que você está pedindo?</label><input type="text" id="a-pedido" placeholder="Ex: melhoria na iluminação da rua"></div>
+      <div class="campo"><label>Descreva o problema</label><textarea id="a-problema" placeholder="Ex: a rua está sem luz há 3 semanas, o que causa insegurança à noite"></textarea></div>
+    </div>
+    <button class="btn-gerar" onclick="gerarTexto('associacao')">✨ Gerar solicitação</button>
+  </div>
+
+  <div class="formulario-box" id="form-curriculo">
+    <div class="form-titulo"><span>📄</span> Currículo simples</div>
+    <div class="campos">
+      <div class="campo"><label>Seu nome completo</label><input type="text" id="c-nome" placeholder="Ex: Francisca Oliveira"></div>
+      <div class="campo"><label>Idade</label><input type="text" id="c-idade" placeholder="Ex: 34 anos"></div>
+      <div class="campo"><label>Telefone / WhatsApp</label><input type="text" id="c-tel" placeholder="Ex: (87) 99999-0000"></div>
+      <div class="campo"><label>Vaga que está buscando</label><input type="text" id="c-vaga" placeholder="Ex: auxiliar de limpeza, vendedora"></div>
+      <div class="campo"><label>Experiências anteriores <em>(opcional)</em></label><textarea id="c-exp" placeholder="Ex: trabalhei 2 anos como doméstica e 1 ano em comércio"></textarea></div>
+      <div class="campo"><label>Suas habilidades</label><textarea id="c-hab" placeholder="Ex: organização, boa comunicação, pontualidade, culinária"></textarea></div>
+    </div>
+    <button class="btn-gerar" onclick="gerarTexto('curriculo')">✨ Gerar currículo</button>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="resultado-box" id="resultadoBox">
+    <div class="resultado-header">
+      <h3>✅ Texto gerado com sucesso!</h3>
+      <div class="acoes">
+        <button class="btn-copiar" id="btnCopiar" onclick="copiarTexto()">📋 Copiar texto</button>
+        <button class="btn-novo" onclick="novoTexto()">🔄 Novo pedido</button>
+      </div>
+    </div>
+    <div class="texto-gerado" id="textoGerado"></div>
+    <div class="dica-chatgpt">
+      <strong>💡 Dica:</strong> Copie este texto e cole no <a href="https://chat.openai.com" target="_blank">ChatGPT</a> pedindo para melhorar ou adaptar. Exemplo: <em>"Melhore este texto deixando-o mais formal"</em> ou <em>"Adapte para o meu caso: [explique sua situação]"</em>.
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Projeto Extensionista: <strong>Uso Responsável da IA como Ferramenta de Inclusão Digital</strong><br>
+  Alan Coelho Gomes (RU 4559969) · CST em Análise e Desenvolvimento de Sistemas · UNINTER · 2026<br>
+  Associação de Moradores do Bairro Areia Branca · Petrolina/PE
+</footer>
+
+<script>
+  let tipoAtivo = null;
+
+  const modelos = {
+    requerimento: () => {
+      const nome    = v('r-nome')    || '[Seu nome]';
+      const cpf     = v('r-cpf')     ? `CPF: ${v('r-cpf')}\n` : '';
+      const orgao   = v('r-orgao')   || '[Nome do órgão]';
+      const doc     = v('r-documento') || '[documento solicitado]';
+      const motivo  = v('r-motivo') || '[motivo do pedido]';
+      const data    = dataHoje();
+      return `Petrolina/PE, ${data}
+
+À ${orgao},
+
+Eu, ${nome}, ${cpf}venho por meio deste requerimento solicitar, respeitosamente, ${doc}.
+
+O motivo desta solicitação é ${motivo}.
+
+Diante do exposto, solicito a análise e o deferimento do presente pedido.
+
+Atenciosamente,
+
+${nome}`;
+    },
+
+    beneficio: () => {
+      const nome      = v('b-nome')     || '[Seu nome]';
+      const bairro    = v('b-bairro')   || '[seu bairro/cidade]';
+      const beneficio = v('b-beneficio')|| '[nome do benefício]';
+      const situacao  = v('b-situacao') || '[sua situação]';
+      const data      = dataHoje();
+      return `Petrolina/PE, ${data}
+
+Assunto: Solicitação de ${beneficio}
+
+Eu, ${nome}, residente em ${bairro}, venho por meio desta carta solicitar o ${beneficio}.
+
+Apresento minha situação: ${situacao}.
+
+Diante das dificuldades enfrentadas, solicito a análise do meu pedido e conto com a compreensão e atenção de Vossas Senhorias.
+
+Atenciosamente,
+
+${nome}`;
+    },
+
+    escola: () => {
+      const nome   = v('e-nome')  || '[Seu nome]';
+      const filho  = v('e-filho') || '[nome do(a) aluno(a)]';
+      const serie  = v('e-serie') || '[série/turma]';
+      const motivo = v('e-motivo')|| '[motivo]';
+      const data   = dataHoje();
+      return `Petrolina/PE, ${data}
+
+À Direção da Escola,
+
+Meu nome é ${nome}, responsável pelo(a) aluno(a) ${filho}, matriculado(a) no(a) ${serie}.
+
+Venho por meio desta comunicação informar que ${motivo}.
+
+Coloco-me à disposição para qualquer esclarecimento adicional que se faça necessário.
+
+Atenciosamente,
+
+${nome}`;
+    },
+
+    associacao: () => {
+      const nome      = v('a-nome')     || '[Seu nome]';
+      const endereco  = v('a-endereco') || '[seu endereço]';
+      const pedido    = v('a-pedido')   || '[o que está pedindo]';
+      const problema  = v('a-problema') || '[descrição do problema]';
+      const data      = dataHoje();
+      return `Petrolina/PE, ${data}
+
+À Associação de Moradores do Bairro Areia Branca,
+
+Eu, ${nome}, morador(a) residente à ${endereco}, venho por meio deste documento solicitar ${pedido}.
+
+Exponho o seguinte problema: ${problema}.
+
+Espero contar com a atenção e providências cabíveis por parte da associação para a resolução deste problema que afeta diretamente a qualidade de vida dos moradores.
+
+Atenciosamente,
+
+${nome}`;
+    },
+
+    curriculo: () => {
+      const nome  = v('c-nome')  || '[Seu nome]';
+      const idade = v('c-idade') || '[sua idade]';
+      const tel   = v('c-tel')   || '[seu telefone]';
+      const vaga  = v('c-vaga')  || '[vaga desejada]';
+      const exp   = v('c-exp')   ? `\nEXPERIÊNCIA PROFISSIONAL\n${v('c-exp')}\n` : '';
+      const hab   = v('c-hab')   || '[suas habilidades]';
+      return `CURRÍCULO
+
+Nome: ${nome}
+Idade: ${idade}
+Telefone / WhatsApp: ${tel}
+Localidade: Petrolina/PE
+${exp}
+HABILIDADES
+${hab}
+
+OBJETIVO PROFISSIONAL
+Busco oportunidade na área de ${vaga}, onde possa contribuir com dedicação, responsabilidade e vontade de crescer profissionalmente.
+
+Estou disponível para entrevista e aguardo contato.`;
+    }
+  };
+
+  function v(id) { return document.getElementById(id)?.value.trim() || ''; }
+
+  function dataHoje() {
+    const d = new Date();
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+
+  function selecionarTipo(tipo) {
+    tipoAtivo = tipo;
+    document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('ativo'));
+    event.currentTarget.classList.add('ativo');
+    document.querySelectorAll('.formulario-box').forEach(f => f.classList.remove('visivel'));
+    document.getElementById('resultadoBox').classList.remove('visivel');
+    const form = document.getElementById('form-' + tipo);
+    if (form) { form.classList.add('visivel'); form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  }
+
+  function gerarTexto(tipo) {
+    const gerador = modelos[tipo];
+    if (!gerador) return;
+    const texto = gerador();
+    document.getElementById('textoGerado').textContent = texto;
+    document.getElementById('resultadoBox').classList.add('visivel');
+    document.getElementById('btnCopiar').textContent = '📋 Copiar texto';
+    document.getElementById('btnCopiar').classList.remove('copiado');
+    setTimeout(() => document.getElementById('resultadoBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+  }
+
+  function copiarTexto() {
+    const texto = document.getElementById('textoGerado').textContent;
+    navigator.clipboard.writeText(texto).then(() => {
+      const btn = document.getElementById('btnCopiar');
+      btn.textContent = '✅ Copiado!';
+      btn.classList.add('copiado');
+      setTimeout(() => { btn.textContent = '📋 Copiar texto'; btn.classList.remove('copiado'); }, 2500);
+    });
+  }
+
+  function novoTexto() {
+    document.getElementById('resultadoBox').classList.remove('visivel');
+    document.querySelectorAll('.formulario-box').forEach(f => f.classList.remove('visivel'));
+    document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('ativo'));
+    tipoAtivo = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
