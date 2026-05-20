@@ -4,25 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerador de Pedidos Formais com IA</title>
+
+<!-- Google Fonts: Sora (interface) + Source Serif 4 (texto gerado) -->
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
 <style>
+  /* ─────────────────────────────────────────────
+     RESET E VARIÁVEIS GLOBAIS
+     Garante comportamento consistente entre
+     navegadores e centraliza as cores do projeto
+  ───────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --azul:    #1a4f7a;
-    --azul2:   #2563a8;
-    --ceu:     #e8f3fc;
-    --verde:   #1a6b45;
-    --verde2:  #d0eed9;
-    --cinza1:  #f5f6f8;
-    --cinza2:  #e4e7ed;
-    --cinza3:  #9aa3b0;
-    --preto:   #1a1f2e;
+    --azul:    #1a4f7a;   /* azul escuro — cor principal */
+    --azul2:   #2563a8;   /* azul médio — hover e destaques */
+    --ceu:     #e8f3fc;   /* azul claro — fundo de seleção */
+    --verde:   #1a6b45;   /* verde — botão copiar / sucesso */
+    --verde2:  #d0eed9;   /* verde claro — não usado aqui */
+    --cinza1:  #f5f6f8;   /* fundo de campos e áreas neutras */
+    --cinza2:  #e4e7ed;   /* bordas */
+    --cinza3:  #9aa3b0;   /* texto secundário / rótulos */
+    --preto:   #1a1f2e;   /* texto principal */
     --branco:  #ffffff;
     --sombra:  0 2px 16px rgba(26,79,122,0.10);
-    --r:       12px;
+    --r:       12px;      /* raio padrão de bordas arredondadas */
   }
 
+  /* ─────────────────────────────────────────────
+     CORPO DA PÁGINA
+     Fonte principal, fundo levemente cinza
+     para criar contraste com os cards brancos
+  ───────────────────────────────────────────── */
   body {
     font-family: 'Sora', sans-serif;
     background: #f0f4f9;
@@ -30,11 +43,15 @@
     min-height: 100vh;
   }
 
-  /* ── HEADER ── */
+  /* ─────────────────────────────────────────────
+     CABEÇALHO FIXO (sticky header)
+     Fica visível enquanto o usuário rola a página,
+     facilitando a identificação do projeto
+  ───────────────────────────────────────────── */
   header {
     background: var(--azul);
     padding: 0 1.5rem;
-    position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 0; z-index: 100; /* fica acima de todos os outros elementos */
     box-shadow: 0 2px 12px rgba(0,0,0,0.18);
   }
   .header-inner {
@@ -44,66 +61,98 @@
   }
   .logo-circle {
     width: 40px; height: 40px; border-radius: 50%;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.15); /* branco semitransparente */
     display: flex; align-items: center; justify-content: center;
     font-size: 20px; flex-shrink: 0;
   }
   header h1 { color: #fff; font-size: 1rem; font-weight: 600; line-height: 1.3; }
   header p  { color: rgba(255,255,255,0.65); font-size: 0.72rem; margin-top: 1px; }
 
-  /* ── HERO ── */
+  /* ─────────────────────────────────────────────
+     SEÇÃO HERO (banner de apresentação)
+     Gradiente azul com título e descrição central
+  ───────────────────────────────────────────── */
   .hero {
     background: linear-gradient(135deg, var(--azul) 0%, var(--azul2) 100%);
     padding: 2.5rem 1.5rem 3rem;
     text-align: center; color: #fff;
   }
+  /* clamp() adapta o tamanho da fonte ao tamanho da tela (responsivo) */
   .hero h2 { font-family: 'Source Serif 4', serif; font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 600; line-height: 1.3; margin-bottom: .7rem; }
   .hero p  { font-size: .9rem; color: rgba(255,255,255,0.75); max-width: 480px; margin: 0 auto; line-height: 1.6; }
 
-  /* ── MAIN LAYOUT ── */
+  /* ─────────────────────────────────────────────
+     ÁREA PRINCIPAL DE CONTEÚDO
+     Limitada a 860px para boa leitura em telas grandes
+     A margem negativa (-1.5rem) sobrepõe ligeiramente o hero
+  ───────────────────────────────────────────── */
   main { max-width: 860px; margin: -1.5rem auto 3rem; padding: 0 1rem; }
 
-  /* ── TIPO CARDS ── */
+  /* ─────────────────────────────────────────────
+     GRADE DE CARDS DE TIPO DE PEDIDO
+     auto-fill + minmax = responsivo sem media queries:
+     cria quantas colunas couberem com mínimo de 155px
+  ───────────────────────────────────────────── */
   .tipos-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--cinza3); margin-bottom: .7rem; }
   .tipos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: .65rem; margin-bottom: 1.5rem; }
 
+  /* Card clicável de cada tipo de pedido */
   .tipo-card {
     background: var(--branco);
     border: 2px solid var(--cinza2);
     border-radius: var(--r); padding: .85rem .8rem;
-    cursor: pointer; transition: all .18s ease;
+    cursor: pointer;
+    transition: all .18s ease; /* animação suave de hover */
     text-align: center;
   }
   .tipo-card:hover { border-color: var(--azul2); background: var(--ceu); transform: translateY(-2px); box-shadow: var(--sombra); }
+  /* Classe .ativo adicionada via JavaScript ao card selecionado */
   .tipo-card.ativo { border-color: var(--azul); background: var(--ceu); box-shadow: 0 0 0 3px rgba(37,99,168,.15); }
   .tipo-card .icone { font-size: 1.6rem; margin-bottom: .4rem; display: block; }
   .tipo-card .nome { font-size: .78rem; font-weight: 600; color: var(--azul); line-height: 1.3; }
 
-  /* ── FORMULÁRIO ── */
+  /* ─────────────────────────────────────────────
+     CAIXAS DE FORMULÁRIO
+     Cada tipo de pedido tem sua própria caixa.
+     Ficam ocultas (display:none) e só aparecem
+     quando o usuário clica no card correspondente
+  ───────────────────────────────────────────── */
   .formulario-box {
     background: var(--branco); border-radius: var(--r);
     box-shadow: var(--sombra); padding: 1.5rem;
-    margin-bottom: 1.5rem; display: none;
+    margin-bottom: 1.5rem;
+    display: none; /* oculto por padrão */
   }
+  /* Classe .visivel adicionada pelo JS para exibir o formulário ativo */
   .formulario-box.visivel { display: block; animation: fadeUp .25s ease; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Animação de entrada suave ao exibir o formulário */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   .form-titulo { font-size: 1rem; font-weight: 700; color: var(--azul); margin-bottom: 1.1rem; display: flex; align-items: center; gap: .5rem; }
   .form-titulo span { font-size: 1.3rem; }
 
+  /* Grade de campos do formulário */
   .campos { display: grid; gap: .85rem; }
   .campo label { display: block; font-size: .78rem; font-weight: 600; color: var(--preto); margin-bottom: .3rem; }
   .campo label em { color: var(--cinza3); font-style: normal; font-weight: 400; }
+
+  /* Estilo unificado para todos os inputs, textareas e selects */
   .campo input, .campo textarea, .campo select {
     width: 100%; font-family: 'Sora', sans-serif; font-size: .88rem;
     padding: .6rem .85rem; border-radius: 8px;
     border: 1.5px solid var(--cinza2); background: var(--cinza1);
     color: var(--preto); transition: border .15s;
-    outline: none; resize: vertical;
+    outline: none; resize: vertical; /* textarea redimensionável verticalmente */
   }
+  /* Destaque visual ao focar em um campo */
   .campo input:focus, .campo textarea:focus, .campo select:focus { border-color: var(--azul2); background: var(--branco); }
   .campo textarea { min-height: 80px; }
 
+  /* Botão principal de geração do texto */
   .btn-gerar {
     margin-top: 1.1rem; width: 100%;
     background: var(--azul); color: #fff;
@@ -111,16 +160,19 @@
     padding: .85rem; font-family: 'Sora', sans-serif;
     font-size: .92rem; font-weight: 700;
     cursor: pointer; transition: background .15s, transform .1s;
-    letter-spacing: .01em;
   }
   .btn-gerar:hover { background: var(--azul2); transform: translateY(-1px); }
   .btn-gerar:active { transform: scale(.98); }
 
-  /* ── RESULTADO ── */
+  /* ─────────────────────────────────────────────
+     CAIXA DE RESULTADO
+     Aparece após o clique em "Gerar texto"
+     com o texto formal pronto para copiar
+  ───────────────────────────────────────────── */
   .resultado-box {
     background: var(--branco); border-radius: var(--r);
     box-shadow: var(--sombra); padding: 1.5rem;
-    display: none;
+    display: none; /* oculto até o JS exibir */
   }
   .resultado-box.visivel { display: block; animation: fadeUp .25s ease; }
 
@@ -135,17 +187,19 @@
   }
   .btn-copiar { background: var(--verde); color: #fff; }
   .btn-copiar:hover { background: #145a38; }
-  .btn-copiar.copiado { background: #145a38; }
   .btn-novo { background: var(--cinza1); color: var(--azul); border: 1.5px solid var(--cinza2); }
   .btn-novo:hover { background: var(--ceu); border-color: var(--azul2); }
 
+  /* Área de exibição do texto gerado — fonte serifada para simular documento formal */
   .texto-gerado {
     background: var(--cinza1); border: 1.5px solid var(--cinza2);
     border-radius: 8px; padding: 1.1rem 1.2rem;
     font-family: 'Source Serif 4', serif; font-size: .92rem;
-    line-height: 1.8; color: var(--preto); white-space: pre-wrap;
+    line-height: 1.8; color: var(--preto);
+    white-space: pre-wrap; /* preserva quebras de linha do texto gerado */
   }
 
+  /* Dica sobre o ChatGPT exibida abaixo do texto gerado */
   .dica-chatgpt {
     margin-top: 1rem; background: var(--ceu);
     border-left: 3px solid var(--azul2);
@@ -153,13 +207,17 @@
     padding: .8rem 1rem; font-size: .8rem;
     color: var(--azul); line-height: 1.6;
   }
-  .dica-chatgpt strong { font-weight: 700; }
 
-  /* ── RODAPÉ ── */
+  /* ─────────────────────────────────────────────
+     RODAPÉ
+  ───────────────────────────────────────────── */
   footer { text-align: center; padding: 1.5rem 1rem 2rem; color: var(--cinza3); font-size: .75rem; line-height: 1.7; }
   footer a { color: var(--azul2); text-decoration: none; }
 
-  /* ── RESPONSIVO ── */
+  /* ─────────────────────────────────────────────
+     RESPONSIVIDADE PARA CELULAR
+     Abaixo de 500px: grade de 2 colunas
+  ───────────────────────────────────────────── */
   @media (max-width: 500px) {
     .tipos-grid { grid-template-columns: repeat(2, 1fr); }
     .hero { padding: 2rem 1rem 2.5rem; }
@@ -168,6 +226,9 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════
+     CABEÇALHO DA PÁGINA
+══════════════════════════════════════════ -->
 <header>
   <div class="header-inner">
     <div class="logo-circle">🤖</div>
@@ -178,15 +239,20 @@
   </div>
 </header>
 
+<!-- Banner de apresentação -->
 <div class="hero">
   <h2>Escreva pedidos formais<br>de forma simples e rápida</h2>
   <p>Preencha os campos abaixo e gere um texto pronto para usar ou enviar ao ChatGPT.</p>
 </div>
 
+<!-- ══════════════════════════════════════════
+     CONTEÚDO PRINCIPAL
+══════════════════════════════════════════ -->
 <main>
 
   <p class="tipos-label">Escolha o tipo de pedido</p>
 
+  <!-- Grade de cards — cada um chama selecionarTipo() com seu identificador -->
   <div class="tipos-grid" id="tiposGrid">
     <div class="tipo-card" onclick="selecionarTipo('requerimento')">
       <span class="icone">🏛️</span>
@@ -210,7 +276,12 @@
     </div>
   </div>
 
-  <!-- FORMULÁRIOS -->
+  <!-- ── FORMULÁRIOS ─────────────────────────────────
+       Cada bloco corresponde a um tipo de pedido.
+       Todos ficam ocultos até o usuário escolher um card.
+  ─────────────────────────────────────────────────── -->
+
+  <!-- Formulário: Requerimento em órgão público -->
   <div class="formulario-box" id="form-requerimento">
     <div class="form-titulo"><span>🏛️</span> Requerimento em órgão público</div>
     <div class="campos">
@@ -223,6 +294,7 @@
     <button class="btn-gerar" onclick="gerarTexto('requerimento')">✨ Gerar texto do pedido</button>
   </div>
 
+  <!-- Formulário: Carta de benefício -->
   <div class="formulario-box" id="form-beneficio">
     <div class="form-titulo"><span>📋</span> Carta de bolsa ou benefício</div>
     <div class="campos">
@@ -234,6 +306,7 @@
     <button class="btn-gerar" onclick="gerarTexto('beneficio')">✨ Gerar carta</button>
   </div>
 
+  <!-- Formulário: Mensagem para escola -->
   <div class="formulario-box" id="form-escola">
     <div class="form-titulo"><span>🏫</span> Mensagem para escola</div>
     <div class="campos">
@@ -245,6 +318,7 @@
     <button class="btn-gerar" onclick="gerarTexto('escola')">✨ Gerar mensagem</button>
   </div>
 
+  <!-- Formulário: Solicitação à associação de moradores -->
   <div class="formulario-box" id="form-associacao">
     <div class="form-titulo"><span>🏘️</span> Solicitação à associação de moradores</div>
     <div class="campos">
@@ -256,6 +330,7 @@
     <button class="btn-gerar" onclick="gerarTexto('associacao')">✨ Gerar solicitação</button>
   </div>
 
+  <!-- Formulário: Currículo simples -->
   <div class="formulario-box" id="form-curriculo">
     <div class="form-titulo"><span>📄</span> Currículo simples</div>
     <div class="campos">
@@ -269,7 +344,10 @@
     <button class="btn-gerar" onclick="gerarTexto('curriculo')">✨ Gerar currículo</button>
   </div>
 
-  <!-- RESULTADO -->
+  <!-- ── ÁREA DE RESULTADO ─────────────────────────────
+       Exibida após a geração do texto, com botões
+       para copiar e para reiniciar o processo
+  ─────────────────────────────────────────────────── -->
   <div class="resultado-box" id="resultadoBox">
     <div class="resultado-header">
       <h3>✅ Texto gerado com sucesso!</h3>
@@ -278,6 +356,7 @@
         <button class="btn-novo" onclick="novoTexto()">🔄 Novo pedido</button>
       </div>
     </div>
+    <!-- O texto gerado pelo JavaScript é inserido aqui -->
     <div class="texto-gerado" id="textoGerado"></div>
     <div class="dica-chatgpt">
       <strong>💡 Dica:</strong> Copie este texto e cole no <a href="https://chat.openai.com" target="_blank">ChatGPT</a> pedindo para melhorar ou adaptar. Exemplo: <em>"Melhore este texto deixando-o mais formal"</em> ou <em>"Adapte para o meu caso: [explique sua situação]"</em>.
@@ -286,23 +365,42 @@
 
 </main>
 
+<!-- Rodapé com identificação do projeto -->
 <footer>
   Projeto Extensionista: <strong>Uso Responsável da IA como Ferramenta de Inclusão Digital</strong><br>
   Alan Coelho Gomes (RU 4559969) · CST em Análise e Desenvolvimento de Sistemas · UNINTER · 2026<br>
   Associação de Moradores do Bairro Areia Branca · Petrolina/PE
 </footer>
 
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT — LÓGICA DA APLICAÇÃO
+     Toda a interatividade da página está aqui.
+     Três responsabilidades principais:
+       1. Controlar qual formulário está visível
+       2. Gerar o texto formal com os dados do usuário
+       3. Copiar o texto para a área de transferência
+══════════════════════════════════════════ -->
 <script>
+
+  // Guarda qual tipo de pedido está ativo no momento
   let tipoAtivo = null;
 
+  // ─────────────────────────────────────────────────────────
+  // MODELOS DE TEXTO
+  // Cada chave do objeto corresponde a um tipo de pedido.
+  // São funções que leem os campos do formulário e retornam
+  // uma string com o texto formal montado dinamicamente.
+  // ─────────────────────────────────────────────────────────
   const modelos = {
+
+    // Modelo: Requerimento formal para órgão público
     requerimento: () => {
-      const nome    = v('r-nome')    || '[Seu nome]';
-      const cpf     = v('r-cpf')     ? `CPF: ${v('r-cpf')}\n` : '';
-      const orgao   = v('r-orgao')   || '[Nome do órgão]';
+      const nome    = v('r-nome')      || '[Seu nome]';
+      const cpf     = v('r-cpf')       ? `CPF: ${v('r-cpf')}\n` : ''; // só inclui CPF se preenchido
+      const orgao   = v('r-orgao')     || '[Nome do órgão]';
       const doc     = v('r-documento') || '[documento solicitado]';
-      const motivo  = v('r-motivo') || '[motivo do pedido]';
-      const data    = dataHoje();
+      const motivo  = v('r-motivo')    || '[motivo do pedido]';
+      const data    = dataHoje();       // data gerada automaticamente
       return `Petrolina/PE, ${data}
 
 À ${orgao},
@@ -318,11 +416,12 @@ Atenciosamente,
 ${nome}`;
     },
 
+    // Modelo: Carta de solicitação de bolsa ou benefício
     beneficio: () => {
-      const nome      = v('b-nome')     || '[Seu nome]';
-      const bairro    = v('b-bairro')   || '[seu bairro/cidade]';
-      const beneficio = v('b-beneficio')|| '[nome do benefício]';
-      const situacao  = v('b-situacao') || '[sua situação]';
+      const nome      = v('b-nome')      || '[Seu nome]';
+      const bairro    = v('b-bairro')    || '[seu bairro/cidade]';
+      const beneficio = v('b-beneficio') || '[nome do benefício]';
+      const situacao  = v('b-situacao')  || '[sua situação]';
       const data      = dataHoje();
       return `Petrolina/PE, ${data}
 
@@ -339,6 +438,7 @@ Atenciosamente,
 ${nome}`;
     },
 
+    // Modelo: Mensagem para escola ou creche
     escola: () => {
       const nome   = v('e-nome')  || '[Seu nome]';
       const filho  = v('e-filho') || '[nome do(a) aluno(a)]';
@@ -360,12 +460,13 @@ Atenciosamente,
 ${nome}`;
     },
 
+    // Modelo: Solicitação à associação de moradores
     associacao: () => {
-      const nome      = v('a-nome')     || '[Seu nome]';
-      const endereco  = v('a-endereco') || '[seu endereço]';
-      const pedido    = v('a-pedido')   || '[o que está pedindo]';
-      const problema  = v('a-problema') || '[descrição do problema]';
-      const data      = dataHoje();
+      const nome     = v('a-nome')     || '[Seu nome]';
+      const endereco = v('a-endereco') || '[seu endereço]';
+      const pedido   = v('a-pedido')   || '[o que está pedindo]';
+      const problema = v('a-problema') || '[descrição do problema]';
+      const data     = dataHoje();
       return `Petrolina/PE, ${data}
 
 À Associação de Moradores do Bairro Areia Branca,
@@ -381,13 +482,15 @@ Atenciosamente,
 ${nome}`;
     },
 
+    // Modelo: Currículo simples
     curriculo: () => {
       const nome  = v('c-nome')  || '[Seu nome]';
       const idade = v('c-idade') || '[sua idade]';
       const tel   = v('c-tel')   || '[seu telefone]';
       const vaga  = v('c-vaga')  || '[vaga desejada]';
-      const exp   = v('c-exp')   ? `\nEXPERIÊNCIA PROFISSIONAL\n${v('c-exp')}\n` : '';
-      const hab   = v('c-hab')   || '[suas habilidades]';
+      // Campo de experiência é opcional — só aparece se preenchido
+      const exp   = v('c-exp') ? `\nEXPERIÊNCIA PROFISSIONAL\n${v('c-exp')}\n` : '';
+      const hab   = v('c-hab') || '[suas habilidades]';
       return `CURRÍCULO
 
 Nome: ${nome}
@@ -405,45 +508,117 @@ Estou disponível para entrevista e aguardo contato.`;
     }
   };
 
-  function v(id) { return document.getElementById(id)?.value.trim() || ''; }
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO AUXILIAR: v(id)
+  // Lê e limpa o valor de um campo pelo seu id.
+  // Retorna string vazia se o campo não existir ou estiver vazio.
+  // ─────────────────────────────────────────────────────────
+  function v(id) {
+    return document.getElementById(id)?.value.trim() || '';
+  }
 
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO AUXILIAR: dataHoje()
+  // Retorna a data atual formatada em português,
+  // ex: "20 de maio de 2026"
+  // ─────────────────────────────────────────────────────────
   function dataHoje() {
     const d = new Date();
-    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho',
+                   'julho','agosto','setembro','outubro','novembro','dezembro'];
     return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
   }
 
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO: selecionarTipo(tipo)
+  // Chamada quando o usuário clica em um card de tipo.
+  // Responsabilidades:
+  //   - Marca o card clicado como ativo (borda azul)
+  //   - Oculta todos os formulários e o resultado anterior
+  //   - Exibe o formulário correspondente ao tipo escolhido
+  //   - Rola a página até o formulário (scroll suave)
+  // ─────────────────────────────────────────────────────────
   function selecionarTipo(tipo) {
     tipoAtivo = tipo;
+
+    // Remove o estado ativo de todos os cards
     document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('ativo'));
+    // Marca o card clicado como ativo
     event.currentTarget.classList.add('ativo');
+
+    // Oculta todos os formulários e o resultado
     document.querySelectorAll('.formulario-box').forEach(f => f.classList.remove('visivel'));
     document.getElementById('resultadoBox').classList.remove('visivel');
+
+    // Exibe o formulário do tipo selecionado
     const form = document.getElementById('form-' + tipo);
-    if (form) { form.classList.add('visivel'); form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    if (form) {
+      form.classList.add('visivel');
+      // Aguarda o próximo frame para o scroll funcionar após o display mudar
+      form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO: gerarTexto(tipo)
+  // Chamada ao clicar no botão "Gerar texto".
+  // Responsabilidades:
+  //   - Chama o modelo de texto correspondente ao tipo
+  //   - Insere o texto gerado na caixa de resultado
+  //   - Exibe a caixa de resultado com animação
+  //   - Rola a página até o resultado
+  // ─────────────────────────────────────────────────────────
   function gerarTexto(tipo) {
     const gerador = modelos[tipo];
     if (!gerador) return;
+
+    // Executa o modelo e obtém o texto formatado
     const texto = gerador();
+
+    // Insere o texto no elemento de resultado
     document.getElementById('textoGerado').textContent = texto;
+
+    // Exibe a caixa de resultado e reseta o botão de copiar
     document.getElementById('resultadoBox').classList.add('visivel');
     document.getElementById('btnCopiar').textContent = '📋 Copiar texto';
     document.getElementById('btnCopiar').classList.remove('copiado');
-    setTimeout(() => document.getElementById('resultadoBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+
+    // Rola até o resultado após a animação de entrada (25ms de delay)
+    setTimeout(() => {
+      document.getElementById('resultadoBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   }
 
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO: copiarTexto()
+  // Usa a API moderna navigator.clipboard para copiar o texto.
+  // Dá feedback visual ao usuário mudando o texto do botão
+  // por 2,5 segundos antes de restaurar o estado original.
+  // ─────────────────────────────────────────────────────────
   function copiarTexto() {
     const texto = document.getElementById('textoGerado').textContent;
+
     navigator.clipboard.writeText(texto).then(() => {
+      // Feedback visual de sucesso
       const btn = document.getElementById('btnCopiar');
       btn.textContent = '✅ Copiado!';
       btn.classList.add('copiado');
-      setTimeout(() => { btn.textContent = '📋 Copiar texto'; btn.classList.remove('copiado'); }, 2500);
+
+      // Restaura o botão após 2,5 segundos
+      setTimeout(() => {
+        btn.textContent = '📋 Copiar texto';
+        btn.classList.remove('copiado');
+      }, 2500);
     });
   }
 
+  // ─────────────────────────────────────────────────────────
+  // FUNÇÃO: novoTexto()
+  // Reseta toda a interface para o estado inicial:
+  //   - Oculta resultado e formulários
+  //   - Remove seleção dos cards
+  //   - Rola suavemente ao topo da página
+  // ─────────────────────────────────────────────────────────
   function novoTexto() {
     document.getElementById('resultadoBox').classList.remove('visivel');
     document.querySelectorAll('.formulario-box').forEach(f => f.classList.remove('visivel'));
@@ -451,6 +626,7 @@ Estou disponível para entrevista e aguardo contato.`;
     tipoAtivo = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
 </script>
 </body>
 </html>
